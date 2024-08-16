@@ -362,7 +362,7 @@ return (
       </div>
     </Show>
 
-    <div class="absolute top-4 right-4 z-10 flex space-x-2">
+    <div class="absolute top-4 right-4 z-10 flex space-x-2 mr-8">
       <button
         class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300"
         onClick={() => setIsOverlayVisible(!isOverlayVisible())}
