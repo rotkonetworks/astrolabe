@@ -4,12 +4,14 @@ WORKDIR /usr/src/app
 COPY Cargo.toml Cargo.lock ./
 COPY src ./src
 RUN cargo install wasm-pack
-RUN wasm-pack build --target web --out-dir www/pkg
+RUN wasm-pack build --target web --out-dir /tmp/pkg
 
 # Build stage for Bun and Solid.js
 FROM oven/bun:alpine as bun-builder
 WORKDIR /usr/src/app
 COPY www ./www
+COPY --from=rust-builder /tmp/pkg ./www/pkg
+
 WORKDIR /usr/src/app/www
 RUN bun install
 RUN bun run build
