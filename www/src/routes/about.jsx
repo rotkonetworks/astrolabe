@@ -100,7 +100,7 @@ pub fn decode_latitude(lat_community: u32) -> f64 {
       </p>
 
       <p class="mt-8 text-center">
-        <A href="/" class="text-blue-500 hover:underline">Home</A>
+        <A href="/" class="text-blue-500 hover:underline">Mapcoder</A>
         {" - "}
         <span>About</span>
       </p>

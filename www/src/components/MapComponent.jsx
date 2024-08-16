@@ -3,6 +3,7 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "uno.css";
 import { debounce } from "lodash-es";
+import { A } from "@solidjs/router";
 
 
 let wasmModule;
@@ -351,7 +352,8 @@ const loadFavorite = (favorite) => {
 };
 
 return (
-  <div class="relative w-full h-screen">
+  <div class="relative w-full h-screen pt-[260px]">
+
     <div id="map" class="absolute inset-0 w-full h-full"></div>
 
     <Show when={showAlert()}>
@@ -693,37 +695,41 @@ decodeInput().length > 0
           </div>
         </div>
       </div>
-    </Show>
+      </Show>
 
-    <Show when={showDeleteConfirmation()}>
-      <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-        <div class="bg-white p-4 rounded">
-          <p>Are you sure you want to delete this favorite?</p>
-          <div class="mt-4 flex justify-end space-x-2">
-            <button
-              class="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400 transition duration-300"
-              onClick={cancelDelete}
-            >
-              Cancel
-            </button>
-            <button
-              class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition duration-300"
-              onClick={confirmDelete}
-            >
-              Delete
-            </button>
+      <A href="/about" class="absolute bottom-4 right-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300">
+        Learn more
+      </A>
+
+      <Show when={showDeleteConfirmation()}>
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div class="bg-white p-4 rounded">
+            <p>Are you sure you want to delete this favorite?</p>
+            <div class="mt-4 flex justify-end space-x-2">
+              <button
+                class="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400 transition duration-300"
+                onClick={cancelDelete}
+              >
+                Cancel
+              </button>
+              <button
+                class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition duration-300"
+                onClick={confirmDelete}
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    </Show>
+      </Show>
 
-    <Show when={isLoading()}>
-      <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-        <div class="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-white"></div>
-      </div>
-    </Show>
-  </div>
-);
+      <Show when={isLoading()}>
+        <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div class="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-white"></div>
+        </div>
+      </Show>
+    </div>
+  );
 };
 
 export default MapComponent;
