@@ -14,7 +14,7 @@ export default function About() {
 
       <h2 class="text-2xl font-semibold mt-6 mb-2">Technical Specifications</h2>
       <ul class="list-disc pl-6 mb-4">
-        <li>Uses standard BGP extended communities</li>
+	<li>Uses standard 32-bit BGP communities (AS:NNNNNNNNNN format)</li>
         <li>Encodes latitude, longitude, and altitude</li>
         <li>Precision: ~1 meter for all dimensions</li>
         <li>Range:
