@@ -1,0 +1,35 @@
+{
+  "name": "astrolabe-www",
+  "type": "module",
+  "scripts": {
+    "dev": "vinxi dev",
+    "build": "vinxi build",
+    "start": "vinxi start",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "format": "prettier --write .",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@solidjs/router": "^0.14.1",
+    "@solidjs/start": "^1.0.6",
+    "ipinfo": "^1.5.1",
+    "lodash-es": "^4.17.21",
+    "mapbox-gl": "^3.6.0",
+    "solid-js": "^1.8.18"
+  },
+  "devDependencies": {
+    "@unocss/preset-typography": "^0.62.1",
+    "@unocss/reset": "^0.59.2",
+    "eslint": "^8.57.0",
+    "eslint-plugin-solid": "^0.13.1",
+    "prettier": "^3.2.5",
+    "typescript": "^5.3.3",
+    "unocss": "^0.59.2",
+    "vinxi": "^0.4.1",
+    "vitest": "^1.6.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

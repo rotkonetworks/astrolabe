@@ -1,0 +1,5 @@
+.env
+.output/
+.vinxi/
+node_modules/
+pkg/
