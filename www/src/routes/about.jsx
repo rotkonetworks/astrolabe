@@ -94,11 +94,6 @@ pub fn decode_latitude(lat_community: u32) -> f64 {
         </div>
       )}
 
-      <h2 class="text-2xl font-semibold mt-6 mb-2">Conclusion</h2>
-      <p class="mb-4">
-        Astrolabe offers enhanced routing capabilities but introduces new attack surfaces. Implement with caution. Benefits must be weighed against potential security risks for each use case.
-      </p>
-
       <p class="mt-8 text-center">
         <A href="/" class="text-blue-500 hover:underline">Mapcoder</A>
         {" - "}
