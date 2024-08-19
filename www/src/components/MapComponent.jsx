@@ -257,444 +257,445 @@ const MapComponent = () => {
     }
   };
 
-const debouncedEncodeCommunity = debounce(encodeCommunity, 300);
+  const debouncedEncodeCommunity = debounce(encodeCommunity, 300);
 
-createEffect(() => {
-  if (lat() && lon()) {
-    debouncedEncodeCommunity(lat(), lon(), alt());
-  }
-});
-
-const copyToClipboard = (text) => {
-  navigator.clipboard.writeText(text).then(
-    () => {
-      showError("Copied to clipboard!");
-    },
-    (err) => {
-      showError("Failed to copy: " + err);
-    },
-  );
-};
-
-const exportData = () => {
-  const data = JSON.stringify({
-    encodedValues: encodedValues(),
-    decodedValues: decodedValues(),
-    history: history(),
-    favorites: favorites(),
-  });
-  const blob = new Blob([data], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "astrolabe_data.json";
-  a.click();
-  URL.revokeObjectURL(url);
-};
-
-const importData = (event) => {
-  const file = event.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const data = JSON.parse(e.target.result);
-        setEncodedValues(data.encodedValues);
-        setDecodedValues(data.decodedValues);
-        setHistory(data.history);
-        setFavorites(data.favorites || []);
-      } catch (err) {
-        showError("Failed to import data: " + err.message);
-      }
-    };
-    reader.readAsText(file);
-  }
-};
-
-const searchLocation = async () => {
-  try {
-    const response = await fetch(
-      `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchQuery())}.json?access_token=${mapboxgl.accessToken}`,
-    );
-    const data = await response.json();
-    if (data.features && data.features.length > 0) {
-      const [lon, lat] = data.features[0].center;
-      setLat(lat.toFixed(6));
-      setLon(lon.toFixed(6));
-      smoothFlyTo(map(), lat, lon);
-      updateMarkerPosition(lat, lon);
-      encodeCommunity(lat, lon, alt());
-    } else {
-      showError("Location not found");
+  createEffect(() => {
+    if (lat() && lon()) {
+      debouncedEncodeCommunity(lat(), lon(), alt());
     }
-  } catch (err) {
-    showError(`Search error: ${err.message}`);
-  }
-};
+  });
 
-const addToFavorites = () => {
-  const newFavorite = {
-    lat: lat(),
-    lon: lon(),
-    alt: alt(),
-    encoded: encodedValues(),
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text).then(
+      () => {
+        showError("Copied to clipboard!");
+      },
+      (err) => {
+        showError("Failed to copy: " + err);
+      },
+    );
   };
-  setFavorites((prev) => [...prev, newFavorite]);
-};
 
-const loadFavorite = (favorite) => {
-  setLat(favorite.lat);
-  setLon(favorite.lon);
-  setAlt(favorite.alt);
-  smoothFlyTo(map(), parseFloat(favorite.lat), parseFloat(favorite.lon));
-  updateMarkerPosition(parseFloat(favorite.lat), parseFloat(favorite.lon));
-  encodeCommunity(favorite.lat, favorite.lon, favorite.alt);
-};
+  const exportData = () => {
+    const data = JSON.stringify({
+      encodedValues: encodedValues(),
+      decodedValues: decodedValues(),
+      history: history(),
+      favorites: favorites(),
+    });
+    const blob = new Blob([data], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "astrolabe_data.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
-return (
-  <div class="relative w-full h-screen pt-[260px]">
+  const importData = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          setEncodedValues(data.encodedValues);
+          setDecodedValues(data.decodedValues);
+          setHistory(data.history);
+          setFavorites(data.favorites || []);
+        } catch (err) {
+          showError("Failed to import data: " + err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
 
-    <div id="map" class="absolute inset-0 w-full h-full"></div>
+  const searchLocation = async () => {
+    try {
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchQuery())}.json?access_token=${mapboxgl.accessToken}`,
+      );
+      const data = await response.json();
+      if (data.features && data.features.length > 0) {
+        const [lon, lat] = data.features[0].center;
+        setLat(lat.toFixed(6));
+        setLon(lon.toFixed(6));
+        smoothFlyTo(map(), lat, lon);
+        updateMarkerPosition(lat, lon);
+        encodeCommunity(lat, lon, alt());
+      } else {
+        showError("Location not found");
+      }
+    } catch (err) {
+      showError(`Search error: ${err.message}`);
+    }
+  };
 
-    <Show when={showAlert()}>
-      <div class="absolute top-4 left-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded animate-fade-out">
-        {error()}
-      </div>
-    </Show>
+  const addToFavorites = () => {
+    const newFavorite = {
+      lat: lat(),
+      lon: lon(),
+      alt: alt(),
+      encoded: encodedValues(),
+    };
+    setFavorites((prev) => [...prev, newFavorite]);
+  };
 
-    <div class="absolute top-4 right-4 z-10 flex space-x-2 mr-8">
-      <button
-        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300"
-        onClick={() => setIsOverlayVisible(!isOverlayVisible())}
-      >
-        {isOverlayVisible() ? "Hide" : "Show"} Controls
-      </button>
-      <select
-        class="px-4 py-2 bg-white rounded"
-        onChange={(e) => {
-          setMapStyle(e.target.value);
-          map().setStyle(e.target.value);
-        }}
-      >
-        <option value="mapbox://styles/mapbox/dark-v10">Dark</option>
-        <option value="mapbox://styles/mapbox/light-v10">Light</option>
-        <option value="mapbox://styles/mapbox/satellite-v9">Satellite</option>
-        <option value="mapbox://styles/mapbox/outdoors-v11">Terrain</option>
-      </select>
-    </div>
+  const loadFavorite = (favorite) => {
+    setLat(favorite.lat);
+    setLon(favorite.lon);
+    setAlt(favorite.alt);
+    smoothFlyTo(map(), parseFloat(favorite.lat), parseFloat(favorite.lon));
+    updateMarkerPosition(parseFloat(favorite.lat), parseFloat(favorite.lon));
+    encodeCommunity(favorite.lat, favorite.lon, favorite.alt);
+  };
 
-    <Show when={isOverlayVisible()}>
-      <div class="absolute bottom-4 left-4 w-96 bg-white bg-opacity-90 backdrop-blur-sm p-4 rounded shadow-lg max-h-[80vh] overflow-y-auto">
-        <div class="flex justify-around mb-4">
-          <button
-            class={`px-4 py-2 rounded transition duration-300 ${activeTab() === "encode" ? "bg-blue-500 text-white" : "bg-gray-200 hover:bg-gray-300"}`}
-            onClick={() => setActiveTab("encode")}
-          >
-            Encode
-          </button>
-          <button
-            class={`px-4 py-2 rounded transition duration-300 ${activeTab() === "decode" ? "bg-blue-500 text-white" : "bg-gray-200 hover:bg-gray-300"}`}
-            onClick={() => setActiveTab("decode")}
-          >
-            Decode
-          </button>
-          <button
-            class={`px-4 py-2 rounded transition duration-300 ${activeTab() === "history" ? "bg-blue-500 text-white" : "bg-gray-200 hover:bg-gray-300"}`}
-            onClick={() => setActiveTab("history")}
-          >
-            History
-          </button>
-          <button
-            class={`px-4 py-2 rounded transition duration-300 ${activeTab() === "favorites" ? "bg-blue-500 text-white" : "bg-gray-200 hover:bg-gray-300"}`}
-            onClick={() => setActiveTab("favorites")}
-          >
-            Favorites
-          </button>
+  return (
+    <div class="relative w-full h-screen pt-[260px]">
+
+      <div id="map" class="absolute inset-0 w-full h-full"></div>
+
+      <Show when={showAlert()}>
+        <div class="absolute top-4 left-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded animate-fade-out">
+          {error()}
         </div>
+      </Show>
 
-        <Show when={activeTab() === "encode"}>
-          <div>
-            <h2 class="text-xl font-bold mb-4">Encode Astrolabe</h2>
-            <div class="space-y-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700">
-                  Latitude
-                </label>
-                <input
-                  type="number"
-                  value={lat()}
-                  onInput={(e) => setLat(e.target.value)}
-                  class="w-full p-2 border rounded"
-                  step="0.000001"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700">
-                  Longitude
-                </label>
-                <input
-                  type="number"
-                  value={lon()}
-                  onInput={(e) => setLon(e.target.value)}
-                  class="w-full p-2 border rounded"
-                  step="0.000001"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700">
-                  Altitude (meters)
-                </label>
-                <input
-                  type="number"
-                  value={alt()}
-                  onInput={(e) => setAlt(e.target.value)}
-                  class="w-full p-2 border rounded"
-                />
-              </div>
-              <button
-                class="w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition duration-300"
-                onClick={() =>
-                  fetchLocation().then(({ lat, lon }) => {
-                    setLat(lat.toFixed(6));
-                    setLon(lon.toFixed(6));
-                  })
-                }
-              >
-                Use Current Location
-              </button>
+      <div class="absolute top-4 right-4 z-10 flex space-x-2 mr-8">
+        <button
+          class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300"
+          onClick={() => setIsOverlayVisible(!isOverlayVisible())}
+        >
+          {isOverlayVisible() ? "Hide" : "Show"} Controls
+        </button>
+        <select
+          class="px-4 py-2 bg-white rounded"
+          onChange={(e) => {
+            setMapStyle(e.target.value);
+            map().setStyle(e.target.value);
+          }}
+        >
+          <option value="mapbox://styles/mapbox/dark-v10">Dark</option>
+          <option value="mapbox://styles/mapbox/light-v10">Light</option>
+          <option value="mapbox://styles/mapbox/satellite-v9">Satellite</option>
+          <option value="mapbox://styles/mapbox/outdoors-v11">Terrain</option>
+        </select>
+      </div>
 
-              <Show when={encodedValues()}>
-                <div class="bg-gray-100 p-3 rounded">
-                  <h4 class="font-semibold mb-2">Encoded Values:</h4>
-                  <p>
-                    Latitude Community: {encodedValues().lat}{" "}
-                    <button
-                      onClick={() => copyToClipboard(encodedValues().lat)}
-                      class="ml-2 text-blue-500"
-                    >
-                      Copy
-                    </button>
-                  </p>
-                  <p>
-                    Longitude Community: {encodedValues().lon}{" "}
-                    <button
-                      onClick={() => copyToClipboard(encodedValues().lon)}
-                      class="ml-2 text-blue-500"
-                    >
-                      Copy
-                    </button>
-                  </p>
-                  <p>
-                    Altitude Community: {encodedValues().alt}{" "}
-                    <button
-                      onClick={() => copyToClipboard(encodedValues().alt)}
-                      class="ml-2 text-blue-500"
-                    >
-                      Copy
-                    </button>
-                  </p>
+      <Show when={isOverlayVisible()}>
+        <div class="absolute bottom-4 left-4 w-64 md:w-96 bg-white bg-opacity-50 backdrop-blur-sm p-4 rounded shadow-lg">
+          <div class="max-h-[80vh] overflow-y-auto">
+          <Show when={activeTab() === "encode"}>
+            <div>
+              <h2 class="text-xl font-bold mb-4">Encode Astrolabe</h2>
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">
+                    Latitude
+                  </label>
+                  <input
+                    type="number"
+                    value={lat()}
+                    onInput={(e) => setLat(e.target.value)}
+                    class="w-full p-2 border rounded"
+                    step="0.000001"
+                  />
                 </div>
-              </Show>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">
+                    Longitude
+                  </label>
+                  <input
+                    type="number"
+                    value={lon()}
+                    onInput={(e) => setLon(e.target.value)}
+                    class="w-full p-2 border rounded"
+                    step="0.000001"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">
+                    Altitude (meters)
+                  </label>
+                  <input
+                    type="number"
+                    value={alt()}
+                    onInput={(e) => setAlt(e.target.value)}
+                    class="w-full p-2 border rounded"
+                  />
+                </div>
+                <button
+                  class="w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition duration-300"
+                  onClick={() =>
+                    fetchLocation().then(({ lat, lon }) => {
+                      setLat(lat.toFixed(6));
+                      setLon(lon.toFixed(6));
+                    })
+                  }
+                >
+                  Use Current Location
+                </button>
 
-              <button
-                class="w-full px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition duration-300"
-                onClick={addToFavorites}
-              >
-                Add to Favorites
-              </button>
+                <Show when={encodedValues()}>
+                  <div class="bg-gray-100 p-3 rounded">
+                    <h4 class="font-semibold mb-2">Encoded Values:</h4>
+                    <p>
+                      Latitude Community: {encodedValues().lat}{" "}
+                      <button
+                        onClick={() => copyToClipboard(encodedValues().lat)}
+                        class="ml-2 text-blue-500"
+                      >
+                        Copy
+                      </button>
+                    </p>
+                    <p>
+                      Longitude Community: {encodedValues().lon}{" "}
+                      <button
+                        onClick={() => copyToClipboard(encodedValues().lon)}
+                        class="ml-2 text-blue-500"
+                      >
+                        Copy
+                      </button>
+                    </p>
+                    <p>
+                      Altitude Community: {encodedValues().alt}{" "}
+                      <button
+                        onClick={() => copyToClipboard(encodedValues().alt)}
+                        class="ml-2 text-blue-500"
+                      >
+                        Copy
+                      </button>
+                    </p>
+                  </div>
+                </Show>
+
+                <button
+                  class="w-full px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition duration-300"
+                  onClick={addToFavorites}
+                >
+                  Add to Favorites
+                </button>
+              </div>
             </div>
-          </div>
-        </Show>
+          </Show>
 
-        <Show when={activeTab() === "decode"}>
-          <div>
-            <h2 class="text-xl font-bold mb-4">Decode Astrolabe</h2>
-            <div class="space-y-4">
-              <div class="relative">
-                <input
-                  type="text"
-                  placeholder="Enter 9-digit Astrolabe code"
-                  value={decodeInput()}
-                  onInput={handleDecodeInputChange}
-                  class={`w-full p-2 pr-10 border rounded ${
+          <Show when={activeTab() === "decode"}>
+            <div>
+              <h2 class="text-xl font-bold mb-4">Decode Astrolabe</h2>
+              <div class="space-y-4">
+                <div class="relative">
+                  <input
+                    type="text"
+                    placeholder="Enter 9-digit Astrolabe code"
+                    value={decodeInput()}
+                    onInput={handleDecodeInputChange}
+                    class={`w-full p-2 pr-10 border rounded ${
 decodeInput().length > 0
 ? isValidInput()
 ? "border-green-500"
 : "border-red-500"
 : ""
 }`}
-                  maxLength={9}
-                />
-                <div class="absolute right-2 top-2">
-                  {isLoading() && (
-                    <div class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-blue-500"></div>
-                  )}
-                  {!isLoading() && decodeInput().length > 0 && (
-                    <span class={isValidInput() ? "text-green-500" : "text-red-500"}>
-                      {decodeInput().length}/9
-                    </span>
-                  )}
+                    maxLength={9}
+                  />
+                  <div class="absolute right-2 top-2">
+                    {isLoading() && (
+                      <div class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-blue-500"></div>
+                    )}
+                    {!isLoading() && decodeInput().length > 0 && (
+                      <span class={isValidInput() ? "text-green-500" : "text-red-500"}>
+                        {decodeInput().length}/9
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              <Show when={Object.keys(accumulatedCoords()).length > 0}>
-                <div class="bg-gray-100 p-3 rounded">
-                  <h4 class="font-semibold mb-2">Accumulated Coordinates:</h4>
-                  <p>Latitude: {accumulatedCoords().latitude?.toFixed(6) ?? 'N/A'}</p>
-                  <p>Longitude: {accumulatedCoords().longitude?.toFixed(6) ?? 'N/A'}</p>
-                  {accumulatedCoords().altitude !== undefined && <p>Altitude: {accumulatedCoords().altitude.toFixed(2)} meters</p>}
-                  <Show when={accumulatedCoords().latitude !== undefined && accumulatedCoords().longitude !== undefined}>
+                <Show when={Object.keys(accumulatedCoords()).length > 0}>
+                  <div class="bg-gray-100 p-3 rounded">
+                    <h4 class="font-semibold mb-2">Accumulated Coordinates:</h4>
+                    <p>Latitude: {accumulatedCoords().latitude?.toFixed(6) ?? 'N/A'}</p>
+                    <p>Longitude: {accumulatedCoords().longitude?.toFixed(6) ?? 'N/A'}</p>
+                    {accumulatedCoords().altitude !== undefined && <p>Altitude: {accumulatedCoords().altitude.toFixed(2)} meters</p>}
+                    <Show when={accumulatedCoords().latitude !== undefined && accumulatedCoords().longitude !== undefined}>
+                      <button
+                        onClick={goToAccumulatedLocation}
+                        class="mt-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300"
+                      >
+                        Go to Location
+                      </button>
+                    </Show>
+                  </div>
+                </Show>
+
+                <Show when={decodedValues().length > 0}>
+                  <h4 class="font-semibold mb-2">Recent Decodes:</h4>
+                  <For each={decodedValues()}>
+                    {(result) => (
+                      <div class="bg-gray-100 p-3 rounded mt-2">
+                        <p class="font-semibold">{result.type.charAt(0).toUpperCase() + result.type.slice(1)}</p>
+                        <p>{result.value.toFixed(6)}</p>
+                      </div>
+                    )}
+                  </For>
+                </Show>
+              </div>
+            </div>
+          </Show>
+
+          <Show when={activeTab() === "history"}>
+            <div>
+              <h2 class="text-xl font-bold mb-4">History</h2>
+              <div class="space-y-4">
+                {history().map((item, index) => (
+                  <div key={index} class="bg-gray-100 p-3 rounded">
+                    <p class="font-semibold">
+                      {item.type === "encode" ? "Encoded" : "Decoded"}
+                    </p>
+                    {item.type === "encode" ? (
+                      <>
+                        <p>
+                          Lat: {item.coordinates.lat}, Lon:{" "}
+                          {item.coordinates.lon}, Alt: {item.coordinates.alt}
+                        </p>
+                        <p>
+                          Encoded: {item.values.lat}, {item.values.lon},{" "}
+                          {item.values.alt}
+                        </p>
+                      </>
+                    ) : (
+                        <>
+                          <p>Input: {item.value}</p>
+                          <p>Result: {item.result}</p>
+                        </>
+                      )}
                     <button
-                      onClick={goToAccumulatedLocation}
                       class="mt-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300"
+                      onClick={() => {
+                        if (item.type === "encode") {
+                          setLat(item.coordinates.lat);
+                          setLon(item.coordinates.lon);
+                          setAlt(item.coordinates.alt);
+                          smoothFlyTo(
+                            map(),
+                            parseFloat(item.coordinates.lat),
+                            parseFloat(item.coordinates.lon),
+                          );
+                          updateMarkerPosition(
+                            parseFloat(item.coordinates.lat),
+                            parseFloat(item.coordinates.lon),
+                          );
+                        } else {
+                          const [decodedLat, decodedLon] = item.result
+                          .split(", ")
+                          .map(parseFloat);
+                          setLat(decodedLat.toFixed(6));
+                          setLon(decodedLon.toFixed(6));
+                          smoothFlyTo(map(), decodedLat, decodedLon);
+                          updateMarkerPosition(decodedLat, decodedLon);
+                        }
+                      }}
                     >
                       Go to Location
                     </button>
-                  </Show>
-                </div>
-              </Show>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Show>
 
-              <Show when={decodedValues().length > 0}>
-                <h4 class="font-semibold mb-2">Recent Decodes:</h4>
-                <For each={decodedValues()}>
-                  {(result) => (
-                    <div class="bg-gray-100 p-3 rounded mt-2">
-                      <p class="font-semibold">{result.type.charAt(0).toUpperCase() + result.type.slice(1)}</p>
-                      <p>{result.value.toFixed(6)}</p>
+          <Show when={activeTab() === "favorites"}>
+            <div>
+              <h2 class="text-xl font-bold mb-4">Favorites</h2>
+              <div class="space-y-4">
+                {favorites().map((favorite, index) => (
+                  <div key={index} class="bg-gray-100 p-3 rounded flex justify-between items-center">
+                    <div>
+                      <p>Lat: {favorite.lat}, Lon: {favorite.lon}, Alt: {favorite.alt}</p>
+                      <p>Encoded: {favorite.encoded.lat}, {favorite.encoded.lon}, {favorite.encoded.alt}</p>
                     </div>
-                  )}
-                </For>
-              </Show>
-            </div>
-          </div>
-        </Show>
-
-        <Show when={activeTab() === "history"}>
-          <div>
-            <h2 class="text-xl font-bold mb-4">History</h2>
-            <div class="space-y-4">
-              {history().map((item, index) => (
-                <div key={index} class="bg-gray-100 p-3 rounded">
-                  <p class="font-semibold">
-                    {item.type === "encode" ? "Encoded" : "Decoded"}
-                  </p>
-                  {item.type === "encode" ? (
-                    <>
-                      <p>
-                        Lat: {item.coordinates.lat}, Lon:{" "}
-                        {item.coordinates.lon}, Alt: {item.coordinates.alt}
-                      </p>
-                      <p>
-                        Encoded: {item.values.lat}, {item.values.lon},{" "}
-                        {item.values.alt}
-                      </p>
-                    </>
-                  ) : (
-                      <>
-                        <p>Input: {item.value}</p>
-                        <p>Result: {item.result}</p>
-                      </>
-                    )}
-                  <button
-                    class="mt-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300"
-                    onClick={() => {
-                      if (item.type === "encode") {
-                        setLat(item.coordinates.lat);
-                        setLon(item.coordinates.lon);
-                        setAlt(item.coordinates.alt);
-                        smoothFlyTo(
-                          map(),
-                          parseFloat(item.coordinates.lat),
-                          parseFloat(item.coordinates.lon),
-                        );
-                        updateMarkerPosition(
-                          parseFloat(item.coordinates.lat),
-                          parseFloat(item.coordinates.lon),
-                        );
-                      } else {
-                        const [decodedLat, decodedLon] = item.result
-                        .split(", ")
-                        .map(parseFloat);
-                        setLat(decodedLat.toFixed(6));
-                        setLon(decodedLon.toFixed(6));
-                        smoothFlyTo(map(), decodedLat, decodedLon);
-                        updateMarkerPosition(decodedLat, decodedLon);
-                      }
-                    }}
-                  >
-                    Go to Location
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        </Show>
-
-        <Show when={activeTab() === "favorites"}>
-          <div>
-            <h2 class="text-xl font-bold mb-4">Favorites</h2>
-            <div class="space-y-4">
-              {favorites().map((favorite, index) => (
-                <div key={index} class="bg-gray-100 p-3 rounded flex justify-between items-center">
-                  <div>
-                    <p>Lat: {favorite.lat}, Lon: {favorite.lon}, Alt: {favorite.alt}</p>
-                    <p>Encoded: {favorite.encoded.lat}, {favorite.encoded.lon}, {favorite.encoded.alt}</p>
+                    <div>
+                      <button
+                        class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300"
+                        onClick={() => loadFavorite(favorite)}
+                      >
+                        Load
+                      </button>
+                      <button
+                        class="ml-2 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition duration-300"
+                        onClick={() => deleteFavorite(index)}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
-                  <div>
-                    <button
-                      class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300"
-                      onClick={() => loadFavorite(favorite)}
-                    >
-                      Load
-                    </button>
-                    <button
-                      class="ml-2 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition duration-300"
-                      onClick={() => deleteFavorite(index)}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        </Show>
+          </Show>
 
-        <div class="mt-4 space-y-2">
-          <div class="flex space-x-2">
-            <input
-              type="text"
-              placeholder="Search location"
-              value={searchQuery()}
-              onInput={(e) => setSearchQuery(e.target.value)}
-              class="flex-grow p-2 border rounded"
-            />
-            <button
-              class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition duration-300"
-              onClick={searchLocation}
-            >
-              Search
-            </button>
-          </div>
-          <div class="flex space-x-2">
-            <button
-              class="flex-1 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300"
-              onClick={exportData}
-            >
-              Export Data
-            </button>
-            <label class="flex-1 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300 text-center cursor-pointer">
-              Import Data
+          <div class="mt-4 space-y-2">
+            <div class="flex space-x-2">
               <input
-                type="file"
-                accept=".json"
-                onChange={importData}
-                class="hidden"
+                type="text"
+                placeholder="Search location"
+                value={searchQuery()}
+                onInput={(e) => setSearchQuery(e.target.value)}
+                class="flex-grow p-2 border rounded"
               />
-            </label>
+              <button
+                class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition duration-300"
+                onClick={searchLocation}
+              >
+                Search
+              </button>
+            </div>
+            <div class="flex space-x-2">
+              <button
+                class="flex-1 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300"
+                onClick={exportData}
+              >
+                Export Data
+              </button>
+              <label class="flex-1 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300 text-center cursor-pointer">
+                Import Data
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={importData}
+                  class="hidden"
+                />
+              </label>
+            </div>
+          </div>
+          </div>
+          <div class="flex justify-around mt-4">
+            <button
+              class={`px-4 py-2 rounded transition duration-300 ${activeTab() === "encode" ? "bg-blue-500 text-white" : "bg-gray-200 hover:bg-gray-300"}`}
+              onClick={() => setActiveTab("encode")}
+            >
+              Encode
+            </button>
+            <button
+              class={`px-4 py-2 rounded transition duration-300 ${activeTab() === "decode" ? "bg-blue-500 text-white" : "bg-gray-200 hover:bg-gray-300"}`}
+              onClick={() => setActiveTab("decode")}
+            >
+              Decode
+            </button>
+            <button
+              class={`px-4 py-2 rounded transition duration-300 ${activeTab() === "history" ? "bg-blue-500 text-white" : "bg-gray-200 hover:bg-gray-300"}`}
+              onClick={() => setActiveTab("history")}
+            >
+              History
+            </button>
+            <button
+              class={`px-4 py-2 rounded transition duration-300 ${activeTab() === "favorites" ? "bg-blue-500 text-white" : "bg-gray-200 hover:bg-gray-300"}`}
+              onClick={() => setActiveTab("favorites")}
+            >
+              Favorites
+            </button>
           </div>
         </div>
-      </div>
       </Show>
 
       <A href="/about" class="absolute bottom-4 right-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300">
